@@ -1,6 +1,7 @@
 package com.shdwraze.metro.service.impl;
 
 import com.shdwraze.metro.model.entity.Station;
+import com.shdwraze.metro.model.response.Path;
 import com.shdwraze.metro.repository.impl.StationRepository;
 import com.shdwraze.metro.service.StationService;
 import lombok.RequiredArgsConstructor;
@@ -9,12 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class StationServiceImpl implements StationService {
+
+    private static final int AVERAGE_TRAVEL_TIME_MIN = 5;
 
     private final StationRepository stationRepository;
 
@@ -42,7 +43,7 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
-    public List<Station> getShortestPathFromStationToStation(String from, String to) {
+    public Path getShortestPathFromStationToStation(String from, String to) {
         Queue<Station> queue = new LinkedList<>();
         Set<String> visited = new HashSet<>();
         Map<String, String> parents = new HashMap<>();
@@ -71,7 +72,12 @@ public class StationServiceImpl implements StationService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Неможливо розрахувати маршрут");
         }
 
-        return reconstructPath(from, to, parents);
+        List<Station> path = reconstructPath(from, to, parents);
+        return Path.builder()
+                .transfersNumber(getNumberOfTransfers(path))
+                .travelTimeInMinutes(getTravelTimeInMinutes(path))
+                .path(path)
+                .build();
     }
 
     private List<Station> getStationNeighbors(Station station) {
@@ -94,5 +100,24 @@ public class StationServiceImpl implements StationService {
 
         path.add(0, stationRepository.findById(fromStationId));
         return path;
+    }
+
+    private int getNumberOfTransfers(List<Station> path) {
+        short numberOfTransfers = 0;
+        String prevLine = path.get(0).getLine();
+
+        for (Station station : path) {
+            String currentLine = station.getLine();
+            if (!currentLine.equals(prevLine)) {
+                numberOfTransfers++;
+            }
+            prevLine = currentLine;
+        }
+
+        return numberOfTransfers;
+    }
+
+    private int getTravelTimeInMinutes(List<Station> path) {
+        return path.stream().mapToInt(station -> AVERAGE_TRAVEL_TIME_MIN).sum();
     }
 }
