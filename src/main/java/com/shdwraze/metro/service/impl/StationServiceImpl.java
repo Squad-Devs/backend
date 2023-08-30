@@ -4,9 +4,13 @@ import com.shdwraze.metro.model.entity.Station;
 import com.shdwraze.metro.repository.impl.StationRepository;
 import com.shdwraze.metro.service.StationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +43,56 @@ public class StationServiceImpl implements StationService {
 
     @Override
     public List<Station> getShortestPathFromStationToStation(String from, String to) {
-        return null;
+        Queue<Station> queue = new LinkedList<>();
+        Set<String> visited = new HashSet<>();
+        Map<String, String> parents = new HashMap<>();
+
+        queue.add(stationRepository.findById(from));
+        visited.add(from);
+
+        while (!queue.isEmpty()) {
+            Station currentStation = queue.poll();
+
+            if (currentStation.getId().equals(to)) {
+                break;
+            }
+
+            for (Station neighbor : getStationNeighbors(currentStation)) {
+                String neighborId = neighbor.getId();
+                if (neighborId != null && !visited.contains(neighborId)) {
+                    queue.add(neighbor);
+                    visited.add(neighborId);
+                    parents.put(neighborId, currentStation.getId());
+                }
+            }
+        }
+
+        if (!parents.containsKey(to)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Неможливо розрахувати маршрут");
+        }
+
+        return reconstructPath(from, to, parents);
+    }
+
+    private List<Station> getStationNeighbors(Station station) {
+        List<Station> neighbors = new ArrayList<>();
+        if (station.getNextStationId() != null) neighbors.add(stationRepository.findById(station.getNextStationId()));
+        if (station.getPrevStationId() != null) neighbors.add(stationRepository.findById(station.getPrevStationId()));
+        if (station.getTransferTo() != null) neighbors.add(stationRepository.findById(station.getTransferTo()));
+
+        return neighbors;
+    }
+
+    private List<Station> reconstructPath(String fromStationId, String toStationId, Map<String, String> parents) {
+        List<Station> path = new ArrayList<>();
+
+        while (!toStationId.equals(fromStationId)) {
+            Station station = stationRepository.findById(toStationId);
+            path.add(0, station);
+            toStationId = parents.get(toStationId);
+        }
+
+        path.add(0, stationRepository.findById(fromStationId));
+        return path;
     }
 }
