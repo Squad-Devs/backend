@@ -31,9 +31,9 @@ public class StationController {
     }
 
     @PutMapping("/{id}")
-    public Station updateStation(@PathVariable String id,
+    public void updateStation(@PathVariable String id,
                                        @RequestBody Station updStation) {
-        return stationService.updateStation(id, updStation);
+        stationService.updateStation(id, updStation);
     }
 
     @GetMapping("/path")

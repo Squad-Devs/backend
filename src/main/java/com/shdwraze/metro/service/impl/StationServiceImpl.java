@@ -33,8 +33,8 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
-    public Station updateStation(String id, Station updStation) {
-        return null;
+    public void updateStation(String id, Station updStation) {
+        stationRepository.update(id, updStation);
     }
 
     @Override

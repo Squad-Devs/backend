@@ -12,7 +12,7 @@ public interface StationService {
 
     Station getStationById(String id);
 
-    Station updateStation(String id, Station updStation);
+    void updateStation(String id, Station updStation);
 
     List<Station> getShortestPathFromStationToStation(String from, String to);
 }
