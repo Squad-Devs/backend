@@ -1,6 +1,7 @@
 package com.shdwraze.metro.service;
 
 import com.shdwraze.metro.model.entity.Station;
+import com.shdwraze.metro.model.response.Path;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public interface StationService {
 
     Station getStationById(String id);
 
-    Station updateStation(String id, Station updStation);
+    void updateStation(String id, Station updStation);
 
-    List<Station> getShortestPathFromStationToStation(String from, String to);
+    Path getShortestPathFromStationToStation(String from, String to);
 }

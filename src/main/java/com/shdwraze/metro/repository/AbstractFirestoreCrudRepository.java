@@ -55,8 +55,8 @@ public abstract class AbstractFirestoreCrudRepository<T> {
         getCollectionReference().add(element);
     }
 
-    public void update(T element) {
-        getCollectionReference().document(getId(element)).set(element);
+    public void update(String id, T element) {
+        getCollectionReference().document(id).set(element);
     }
 
     public void delete(String id) {

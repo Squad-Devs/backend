@@ -1,6 +1,7 @@
 package com.shdwraze.metro.controller;
 
 import com.shdwraze.metro.model.entity.Station;
+import com.shdwraze.metro.model.response.Path;
 import com.shdwraze.metro.service.StationService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -31,13 +32,13 @@ public class StationController {
     }
 
     @PutMapping("/{id}")
-    public Station updateStation(@PathVariable String id,
+    public void updateStation(@PathVariable String id,
                                        @RequestBody Station updStation) {
-        return stationService.updateStation(id, updStation);
+        stationService.updateStation(id, updStation);
     }
 
     @GetMapping("/path")
-    public List<Station> getShortestPathFromStationToStation(
+    public Path getShortestPathFromStationToStation(
             @RequestParam String from,
             @RequestParam String to
     ) {
