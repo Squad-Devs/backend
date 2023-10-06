@@ -5,12 +5,14 @@ import com.shdwraze.metro.model.response.Path;
 import com.shdwraze.metro.repository.impl.StationRepository;
 import com.shdwraze.metro.service.StationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StationServiceImpl implements StationService {
@@ -80,11 +82,24 @@ public class StationServiceImpl implements StationService {
                 .build();
     }
 
+    @Override
+    public void addStations(List<Station> stations) {
+        for (Station station : stations) {
+            log.error(addStation(station).toString());
+        }
+    }
+
     private List<Station> getStationNeighbors(Station station) {
         List<Station> neighbors = new ArrayList<>();
-        if (station.getNextStationId() != null) neighbors.add(stationRepository.findById(station.getNextStationId()));
-        if (station.getPrevStationId() != null) neighbors.add(stationRepository.findById(station.getPrevStationId()));
-        if (station.getTransferTo() != null) neighbors.add(stationRepository.findById(station.getTransferTo()));
+        if (station.getNextStation() != null) {
+            neighbors.add(stationRepository.findById(station.getNextStation().getId()));
+        }
+        if (station.getPrevStation() != null) {
+            neighbors.add(stationRepository.findById(station.getPrevStation().getId()));
+        }
+        if (station.getTransferTo() != null) {
+            neighbors.add(stationRepository.findById(station.getTransferTo().getId()));
+        }
 
         return neighbors;
     }

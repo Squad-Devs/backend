@@ -16,4 +16,6 @@ public interface StationService {
     void updateStation(String id, Station updStation);
 
     Path getShortestPathFromStationToStation(String from, String to);
+
+    void addStations(List<Station> stations);
 }

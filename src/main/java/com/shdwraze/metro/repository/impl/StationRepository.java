@@ -2,7 +2,6 @@ package com.shdwraze.metro.repository.impl;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.shdwraze.metro.exception.RepositoryException;
@@ -10,7 +9,6 @@ import com.shdwraze.metro.model.entity.Station;
 import com.shdwraze.metro.repository.AbstractFirestoreCrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

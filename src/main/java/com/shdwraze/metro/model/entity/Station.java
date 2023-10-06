@@ -1,13 +1,11 @@
 package com.shdwraze.metro.model.entity;
 
 import com.google.cloud.firestore.annotation.DocumentId;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class Station {
@@ -21,9 +19,9 @@ public class Station {
 
     private String city;
 
-    private String nextStationId;
+    private ShortStationInfo nextStation;
 
-    private String prevStationId;
+    private ShortStationInfo prevStation;
 
-    private String transferTo;
+    private ShortStationInfo transferTo;
 }

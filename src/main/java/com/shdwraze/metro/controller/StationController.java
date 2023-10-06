@@ -26,6 +26,11 @@ public class StationController {
         return stationService.addStation(station);
     }
 
+    @PostMapping("/add")
+    public void addStations(@RequestBody List<Station> stations) {
+        stationService.addStations(stations);
+    }
+
     @GetMapping("/{id}")
     public Station getStationById(@PathVariable String id) {
         return stationService.getStationById(id);
