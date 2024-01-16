@@ -3,6 +3,8 @@ package com.shdwraze.metro.model.entity;
 import com.google.cloud.firestore.annotation.DocumentId;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @ToString
@@ -24,4 +26,10 @@ public class Station {
     private ShortStationInfo prevStation;
 
     private ShortStationInfo transferTo;
+
+    private float latitude;
+
+    private float longitude;
+
+    private List<Exit> exits;
 }
