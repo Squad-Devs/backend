@@ -1,5 +1,6 @@
 package com.shdwraze.metro.controller;
 
+import com.shdwraze.metro.model.response.Metropolitan;
 import com.shdwraze.metro.service.MetroService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,5 +23,10 @@ public class MetroController {
     @GetMapping("/lines")
     public Set<String> getMetroLinesByCity(@RequestParam String city) {
         return metroService.getMetroLinesByCity(city);
+    }
+
+    @GetMapping("/metropolitan")
+    public Metropolitan getMetropolitanByCity(@RequestParam String city) {
+        return metroService.getMetropolitanByCity(city);
     }
 }
