@@ -3,6 +3,7 @@ package com.shdwraze.metro.model.entity;
 import com.google.cloud.firestore.annotation.DocumentId;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
@@ -10,7 +11,7 @@ import java.util.List;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class Station {
+public class Station implements Serializable {
 
     @DocumentId
     private String id;

@@ -6,6 +6,8 @@ import com.shdwraze.metro.model.response.Metropolitan;
 import com.shdwraze.metro.repository.impl.StationRepository;
 import com.shdwraze.metro.service.MetroService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
@@ -36,6 +38,7 @@ public class MetroServiceImpl implements MetroService {
     }
 
     @Override
+    @Cacheable(value = "metropolitan", key = "#city")
     public Metropolitan getMetropolitanByCity(String city) {
         List<Station> stations = stationRepository.findAllByCity(city);
         Map<String, List<Station>> stationsByLine = stations.stream()

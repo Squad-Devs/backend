@@ -3,6 +3,7 @@ package com.shdwraze.metro.model.response;
 import com.shdwraze.metro.model.entity.Station;
 import lombok.Builder;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Builder
@@ -12,5 +13,5 @@ public record Path(
         int travelTimeInMinutes,
 
         List<Station> path
-) {
+) implements Serializable {
 }
