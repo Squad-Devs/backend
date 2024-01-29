@@ -26,7 +26,7 @@ public class Station implements Serializable {
 
     private ShortStationInfo prevStation;
 
-    private ShortStationInfo transferTo;
+    private TransferToStationShortInfo transferTo;
 
     private float latitude;
 

@@ -6,13 +6,12 @@ import com.shdwraze.metro.model.response.Metropolitan;
 import com.shdwraze.metro.repository.impl.StationRepository;
 import com.shdwraze.metro.service.MetroService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,10 +43,7 @@ public class MetroServiceImpl implements MetroService {
         Map<String, List<Station>> stationsByLine = stations.stream()
                 .collect(Collectors.groupingBy(Station::getLine))
                 .entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> {
-                    List<Station> sortedStations = sortStations(e.getValue());
-                    return sortedStations;
-                }));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> sortStations(e.getValue())));
 
         List<MetroLine> metroLines = stationsByLine.entrySet().stream()
                 .map(entry -> new MetroLine(entry.getKey(),

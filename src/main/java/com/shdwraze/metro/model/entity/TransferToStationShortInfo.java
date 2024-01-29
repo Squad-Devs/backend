@@ -11,11 +11,13 @@ import java.io.Serializable;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShortStationInfo implements Serializable {
+public class TransferToStationShortInfo implements Serializable {
 
     private String id;
 
     private String name;
 
     private String line;
+
+    private int color;
 }
