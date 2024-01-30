@@ -1,13 +1,13 @@
 package com.shdwraze.metro.repository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.CollectionReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.*;
 import com.shdwraze.metro.exception.RepositoryException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractFirestoreCrudRepository<T> {
 
@@ -56,7 +56,37 @@ public abstract class AbstractFirestoreCrudRepository<T> {
     }
 
     public void update(String id, T element) {
-        getCollectionReference().document(id).set(element);
+        Map<String, Object> updates = new HashMap<>();
+
+        DocumentReference documentReference = getCollectionReference().document(id);
+        ApiFuture<DocumentSnapshot> future = documentReference.get();
+        DocumentSnapshot document;
+        try {
+            document = future.get();
+        } catch (Exception e) {
+            throw new RepositoryException(e);
+        }
+
+        if (document.exists()) {
+            T existingElement = document.toObject(getEntityType());
+            if (existingElement != null) {
+                Map<String, Object> existingFields = new ObjectMapper().convertValue(existingElement, Map.class);
+                Map<String, Object> newFields = new ObjectMapper().convertValue(element, Map.class);
+
+                for (Map.Entry<String, Object> entry : newFields.entrySet()) {
+                    Object newValue = entry.getValue();
+                    Object existingValue = existingFields.get(entry.getKey());
+
+                    if (newValue != null && !newValue.equals(existingValue)) {
+                        updates.put(entry.getKey(), newValue);
+                    }
+                }
+            }
+        }
+
+        if (!updates.isEmpty()) {
+            documentReference.update(updates);
+        }
     }
 
     public void delete(String id) {

@@ -1,17 +1,15 @@
 package com.shdwraze.metro.model.response;
 
 import com.shdwraze.metro.model.entity.Station;
-import lombok.Builder;
 
 import java.io.Serializable;
 import java.util.List;
 
-@Builder
-public record Path(
-        int transfersNumber,
+public record MetroLine(
+        String name,
 
-        int travelTimeInMinutes,
+        int color,
 
-        List<Station> path
+        List<Station> stations
 ) implements Serializable {
 }

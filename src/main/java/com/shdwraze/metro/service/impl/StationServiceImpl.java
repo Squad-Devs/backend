@@ -6,6 +6,7 @@ import com.shdwraze.metro.repository.impl.StationRepository;
 import com.shdwraze.metro.service.StationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,6 +46,8 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
+    @Cacheable(value = "shortestPath", key = "#from.concat('-').concat(#to)",
+            unless = "#result == null", cacheManager = "cacheManagerWithTTL")
     public Path getShortestPathFromStationToStation(String from, String to) {
         Queue<Station> queue = new LinkedList<>();
         Set<String> visited = new HashSet<>();

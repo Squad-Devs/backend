@@ -36,7 +36,7 @@ public class StationController {
         return stationService.getStationById(id);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public void updateStation(@PathVariable String id,
                                        @RequestBody Station updStation) {
         stationService.updateStation(id, updStation);

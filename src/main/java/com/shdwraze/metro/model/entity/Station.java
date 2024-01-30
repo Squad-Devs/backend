@@ -3,12 +3,15 @@ package com.shdwraze.metro.model.entity;
 import com.google.cloud.firestore.annotation.DocumentId;
 import lombok.*;
 
+import java.io.Serializable;
+import java.util.List;
+
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class Station {
+public class Station implements Serializable {
 
     @DocumentId
     private String id;
@@ -23,5 +26,11 @@ public class Station {
 
     private ShortStationInfo prevStation;
 
-    private ShortStationInfo transferTo;
+    private TransferToStationShortInfo transferTo;
+
+    private float latitude;
+
+    private float longitude;
+
+    private List<Exit> exits;
 }
