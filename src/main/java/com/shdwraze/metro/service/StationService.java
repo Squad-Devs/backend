@@ -11,11 +11,11 @@ public interface StationService {
 
     Station addStation(Station station);
 
-    Station getStationById(String id);
+    Station getStationById(Integer id);
 
     void updateStation(String id, Station updStation);
 
-    Path getShortestPathFromStationToStation(String from, String to);
+    Path getShortestPathFromStationToStation(Integer from, Integer to);
 
     void addStations(List<Station> stations);
 }

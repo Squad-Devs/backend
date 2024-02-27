@@ -32,7 +32,7 @@ public class StationController {
     }
 
     @GetMapping("/{id}")
-    public Station getStationById(@PathVariable String id) {
+    public Station getStationById(@PathVariable Integer id) {
         return stationService.getStationById(id);
     }
 
@@ -44,8 +44,8 @@ public class StationController {
 
     @GetMapping("/path")
     public Path getShortestPathFromStationToStation(
-            @RequestParam String from,
-            @RequestParam String to
+            @RequestParam Integer from,
+            @RequestParam Integer to
     ) {
         return stationService.getShortestPathFromStationToStation(from, to);
     }

@@ -1,8 +1,10 @@
 package com.shdwraze.metro.service.impl;
 
+import com.shdwraze.metro.model.entity.Connection;
 import com.shdwraze.metro.model.entity.Station;
+import com.shdwraze.metro.model.entity.enums.ConnectionType;
 import com.shdwraze.metro.model.response.Path;
-import com.shdwraze.metro.repository.impl.StationRepository;
+import com.shdwraze.metro.repository.StationRepository;
 import com.shdwraze.metro.service.StationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +27,8 @@ public class StationServiceImpl implements StationService {
     @Override
     public List<Station> getStations(String city, String line) {
         return line != null
-                ? stationRepository.findAllByCityAndLine(city, line)
-                : stationRepository.findAllByCity(city);
+                ? stationRepository.findByCityNameAndLineName(city, line)
+                : stationRepository.findByCityName(city);
     }
 
     @Override
@@ -36,24 +38,27 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
-    public Station getStationById(String id) {
-        return stationRepository.findById(id);
+    public Station getStationById(Integer id) {
+        return stationRepository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!"));
     }
 
     @Override
     public void updateStation(String id, Station updStation) {
-        stationRepository.update(id, updStation);
+//        stationRepository.update(id, updStation);
+        // todo
     }
 
     @Override
     @Cacheable(value = "shortestPath", key = "#from.concat('-').concat(#to)",
             unless = "#result == null", cacheManager = "cacheManagerWithTTL")
-    public Path getShortestPathFromStationToStation(String from, String to) {
+    public Path getShortestPathFromStationToStation(Integer from, Integer to) {
         Queue<Station> queue = new LinkedList<>();
-        Set<String> visited = new HashSet<>();
-        Map<String, String> parents = new HashMap<>();
+        Set<Integer> visited = new HashSet<>();
+        Map<Integer, Integer> parents = new HashMap<>();
 
-        queue.add(stationRepository.findById(from));
+        queue.add(stationRepository.findById(from).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!")));
         visited.add(from);
 
         while (!queue.isEmpty()) {
@@ -64,7 +69,7 @@ public class StationServiceImpl implements StationService {
             }
 
             for (Station neighbor : getStationNeighbors(currentStation)) {
-                String neighborId = neighbor.getId();
+                Integer neighborId = neighbor.getId();
                 if (neighborId != null && !visited.contains(neighborId)) {
                     queue.add(neighbor);
                     visited.add(neighborId);
@@ -94,38 +99,45 @@ public class StationServiceImpl implements StationService {
 
     private List<Station> getStationNeighbors(Station station) {
         List<Station> neighbors = new ArrayList<>();
-        if (station.getNextStation() != null) {
-            neighbors.add(stationRepository.findById(station.getNextStation().getId()));
-        }
-        if (station.getPrevStation() != null) {
-            neighbors.add(stationRepository.findById(station.getPrevStation().getId()));
-        }
-        if (station.getTransferTo() != null) {
-            neighbors.add(stationRepository.findById(station.getTransferTo().getId()));
+
+        // Получаем все соединения для данной станции
+        List<Connection> connections = station.getConnections();
+
+        // Проходимся по каждому соединению и добавляем соседние станции
+        for (Connection connection : connections) {
+            if (connection.getType() == ConnectionType.NEXT || connection.getType() == ConnectionType.TRANSFER) {
+                neighbors.add(connection.getToStation());
+            }
+            if (connection.getType() == ConnectionType.PREV) {
+                neighbors.add(connection.getFromStation());
+            }
         }
 
         return neighbors;
     }
 
-    private List<Station> reconstructPath(String fromStationId, String toStationId, Map<String, String> parents) {
+
+    private List<Station> reconstructPath(Integer fromStationId, Integer toStationId, Map<Integer, Integer> parents) {
         List<Station> path = new ArrayList<>();
 
         while (!toStationId.equals(fromStationId)) {
-            Station station = stationRepository.findById(toStationId);
+            Station station = stationRepository.findById(toStationId).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!"));
             path.add(0, station);
             toStationId = parents.get(toStationId);
         }
 
-        path.add(0, stationRepository.findById(fromStationId));
+        path.add(0, stationRepository.findById(fromStationId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!")));
         return path;
     }
 
     private int getNumberOfTransfers(List<Station> path) {
         short numberOfTransfers = 0;
-        String prevLine = path.get(0).getLine();
+        String prevLine = path.get(0).getLine().getName();
 
         for (Station station : path) {
-            String currentLine = station.getLine();
+            String currentLine = station.getLine().getName();
             if (!currentLine.equals(prevLine)) {
                 numberOfTransfers++;
             }

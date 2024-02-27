@@ -1,9 +1,14 @@
 package com.shdwraze.metro.service.impl;
 
+import com.shdwraze.metro.model.entity.City;
+import com.shdwraze.metro.model.entity.Connection;
+import com.shdwraze.metro.model.entity.Line;
 import com.shdwraze.metro.model.entity.Station;
+import com.shdwraze.metro.model.entity.enums.ConnectionType;
 import com.shdwraze.metro.model.response.MetroLine;
 import com.shdwraze.metro.model.response.Metropolitan;
-import com.shdwraze.metro.repository.impl.StationRepository;
+import com.shdwraze.metro.repository.CityRepository;
+import com.shdwraze.metro.repository.StationRepository;
 import com.shdwraze.metro.service.MetroService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,37 +23,32 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MetroServiceImpl implements MetroService {
 
+    private final CityRepository cityRepository;
+
     private final StationRepository stationRepository;
 
-    private final Map<String, Integer> metroLineColors = Map.of(
-            "Холодногірсько-заводська лінія", 0xFFEA4335,
-            "Салтівська лінія", 0xFF0167b4,
-            "Олексіївська лінія", 0xFF00933C
-    );
-
     @Override
-    public Set<String> getCities() {
-        return stationRepository.getCities();
-    }
-
-    @Override
-    public Set<String> getMetroLinesByCity(String city) {
-        return stationRepository.getMetroLinesByCity(city);
+    public List<City> getCities() {
+        return cityRepository.findAll();
     }
 
     @Override
     @Cacheable(value = "metropolitan", key = "#city")
     public Metropolitan getMetropolitanByCity(String city) {
-        List<Station> stations = stationRepository.findAllByCity(city);
-        Map<String, List<Station>> stationsByLine = stations.stream()
-                .collect(Collectors.groupingBy(Station::getLine))
-                .entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> sortStations(e.getValue())));
+        List<Station> stations = stationRepository.findByCityName(city);
+
+        // Группировка станций по линиям
+        Map<Line, List<Station>> stationsByLine = stations.stream()
+                .collect(Collectors.groupingBy(Station::getLine));
 
         List<MetroLine> metroLines = stationsByLine.entrySet().stream()
-                .map(entry -> new MetroLine(entry.getKey(),
-                        metroLineColors.getOrDefault(entry.getKey(), Color.BLACK.getRGB()),
-                        entry.getValue()))
+                .map(entry -> {
+                    Line line = entry.getKey();
+                    List<Station> lineStations = entry.getValue();
+                    int color = line.getColor() != null ? line.getColor() : Color.BLACK.getRGB();
+                    List<Station> sortedStations = sortStations(lineStations);
+                    return new MetroLine(line.getName(), color, sortedStations);
+                })
                 .toList();
 
         return new Metropolitan(city, metroLines);
@@ -57,16 +57,19 @@ public class MetroServiceImpl implements MetroService {
     private List<Station> sortStations(List<Station> stations) {
         List<Station> sortedStations = new ArrayList<>();
 
+        // Находим начальную станцию
         Station currentStation = stations.stream()
-                .filter(station -> station.getPrevStation() == null)
+                .filter(station -> station.getConnections().stream()
+                        .noneMatch(connection -> connection.getType() == ConnectionType.PREV))
                 .findFirst()
                 .orElse(null);
 
         while (currentStation != null) {
             sortedStations.add(currentStation);
-            String nextStationId = currentStation.getNextStation() != null ? currentStation.getNextStation().getId() : null;
-            currentStation = stations.stream()
-                    .filter(station -> Objects.equals(station.getId(), nextStationId))
+            // Ищем следующую станцию по соединениям
+            currentStation = currentStation.getConnections().stream()
+                    .filter(connection -> connection.getType() == ConnectionType.NEXT)
+                    .map(Connection::getToStation)
                     .findFirst()
                     .orElse(null);
         }

@@ -1,36 +1,49 @@
 package com.shdwraze.metro.model.entity;
 
-import com.google.cloud.firestore.annotation.DocumentId;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.*;
 
-import java.io.Serializable;
 import java.util.List;
 
+@Entity
+@Table(name = "stations")
 @Getter
 @Setter
-@ToString
-@NoArgsConstructor
 @AllArgsConstructor
-public class Station implements Serializable {
+@NoArgsConstructor
+@ToString
+@Builder
+public class Station {
 
-    @DocumentId
-    private String id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     private String name;
 
-    private String line;
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST,
+            CascadeType.DETACH, CascadeType.REFRESH})
+    private Line line;
 
-    private String city;
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST,
+            CascadeType.DETACH, CascadeType.REFRESH})
+    private City city;
 
-    private ShortStationInfo nextStation;
+    private Double latitude;
 
-    private ShortStationInfo prevStation;
+    private Double longitude;
 
-    private TransferToStationShortInfo transferTo;
-
-    private float latitude;
-
-    private float longitude;
-
+    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST,
+            CascadeType.DETACH, CascadeType.REFRESH},
+            mappedBy = "station")
+    @ToString.Exclude
     private List<Exit> exits;
+
+    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST,
+            CascadeType.DETACH, CascadeType.REFRESH},
+            mappedBy = "fromStation")
+    @JsonIgnore
+    @ToString.Exclude
+    private List<Connection> connections;
 }
