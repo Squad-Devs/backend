@@ -1,14 +1,15 @@
 package com.shdwraze.metro.service;
 
+import com.shdwraze.metro.model.entity.City;
 import com.shdwraze.metro.model.response.Metropolitan;
 
-import java.util.Set;
+import java.util.List;
 
 public interface MetroService {
 
-    Set<String> getCities();
+    List<City> getCities();
 
-    Set<String> getMetroLinesByCity(String city);
+//    Set<String> getMetroLinesByCity(String city);
 
     Metropolitan getMetropolitanByCity(String city);
 }

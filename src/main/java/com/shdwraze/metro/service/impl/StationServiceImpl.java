@@ -1,9 +1,12 @@
 package com.shdwraze.metro.service.impl;
 
+import com.shdwraze.metro.model.entity.Connection;
 import com.shdwraze.metro.model.entity.Station;
 import com.shdwraze.metro.model.response.Path;
-import com.shdwraze.metro.repository.impl.StationRepository;
+import com.shdwraze.metro.model.response.StationResponse;
+import com.shdwraze.metro.repository.StationRepository;
 import com.shdwraze.metro.service.StationService;
+import com.shdwraze.metro.service.util.StationResponseHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -20,40 +23,36 @@ public class StationServiceImpl implements StationService {
 
     private static final int AVERAGE_TRAVEL_TIME_MIN = 5;
 
+    private final StationResponseHelper stationResponseHelper;
+
     private final StationRepository stationRepository;
 
     @Override
-    public List<Station> getStations(String city, String line) {
-        return line != null
-                ? stationRepository.findAllByCityAndLine(city, line)
-                : stationRepository.findAllByCity(city);
+    public List<StationResponse> getStations(String city, String line) {
+        List<Station> stations = line != null
+                ? stationRepository.findByCityNameAndLineName(city, line)
+                : stationRepository.findByCityName(city);
+
+        return stations.stream().map(stationResponseHelper::convertToStationResponse).toList();
     }
 
     @Override
-    public Station addStation(Station station) {
-        stationRepository.save(station);
-        return station;
+    public StationResponse getStationById(Integer id) {
+        Station station = stationRepository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!"));
+        return stationResponseHelper.convertToStationResponse(station);
     }
 
     @Override
-    public Station getStationById(String id) {
-        return stationRepository.findById(id);
-    }
-
-    @Override
-    public void updateStation(String id, Station updStation) {
-        stationRepository.update(id, updStation);
-    }
-
-    @Override
-    @Cacheable(value = "shortestPath", key = "#from.concat('-').concat(#to)",
+    @Cacheable(value = "shortestPath", key = "#from.toString().concat(#to.toString())",
             unless = "#result == null", cacheManager = "cacheManagerWithTTL")
-    public Path getShortestPathFromStationToStation(String from, String to) {
+    public Path getShortestPathFromStationToStation(Integer from, Integer to) {
         Queue<Station> queue = new LinkedList<>();
-        Set<String> visited = new HashSet<>();
-        Map<String, String> parents = new HashMap<>();
+        Set<Integer> visited = new HashSet<>();
+        Map<Integer, Integer> parents = new HashMap<>();
 
-        queue.add(stationRepository.findById(from));
+        queue.add(stationRepository.findById(from).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!")));
         visited.add(from);
 
         while (!queue.isEmpty()) {
@@ -64,7 +63,7 @@ public class StationServiceImpl implements StationService {
             }
 
             for (Station neighbor : getStationNeighbors(currentStation)) {
-                String neighborId = neighbor.getId();
+                Integer neighborId = neighbor.getId();
                 if (neighborId != null && !visited.contains(neighborId)) {
                     queue.add(neighbor);
                     visited.add(neighborId);
@@ -81,51 +80,43 @@ public class StationServiceImpl implements StationService {
         return Path.builder()
                 .transfersNumber(getNumberOfTransfers(path))
                 .travelTimeInMinutes(getTravelTimeInMinutes(path))
-                .path(path)
+                .path(path.stream().map(stationResponseHelper::convertToStationResponse).toList())
                 .build();
-    }
-
-    @Override
-    public void addStations(List<Station> stations) {
-        for (Station station : stations) {
-            log.error(addStation(station).toString());
-        }
     }
 
     private List<Station> getStationNeighbors(Station station) {
         List<Station> neighbors = new ArrayList<>();
-        if (station.getNextStation() != null) {
-            neighbors.add(stationRepository.findById(station.getNextStation().getId()));
-        }
-        if (station.getPrevStation() != null) {
-            neighbors.add(stationRepository.findById(station.getPrevStation().getId()));
-        }
-        if (station.getTransferTo() != null) {
-            neighbors.add(stationRepository.findById(station.getTransferTo().getId()));
+
+        List<Connection> connections = station.getConnections();
+
+        for (Connection connection : connections) {
+            neighbors.add(connection.getToStation());
         }
 
         return neighbors;
     }
 
-    private List<Station> reconstructPath(String fromStationId, String toStationId, Map<String, String> parents) {
+    private List<Station> reconstructPath(Integer fromStationId, Integer toStationId, Map<Integer, Integer> parents) {
         List<Station> path = new ArrayList<>();
 
         while (!toStationId.equals(fromStationId)) {
-            Station station = stationRepository.findById(toStationId);
+            Station station = stationRepository.findById(toStationId).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!"));
             path.add(0, station);
             toStationId = parents.get(toStationId);
         }
 
-        path.add(0, stationRepository.findById(fromStationId));
+        path.add(0, stationRepository.findById(fromStationId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!")));
         return path;
     }
 
     private int getNumberOfTransfers(List<Station> path) {
         short numberOfTransfers = 0;
-        String prevLine = path.get(0).getLine();
+        String prevLine = path.get(0).getLine().getName();
 
         for (Station station : path) {
-            String currentLine = station.getLine();
+            String currentLine = station.getLine().getName();
             if (!currentLine.equals(prevLine)) {
                 numberOfTransfers++;
             }
