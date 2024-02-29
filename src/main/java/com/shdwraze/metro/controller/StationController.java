@@ -36,12 +36,6 @@ public class StationController {
         return stationService.getStationById(id);
     }
 
-    @PatchMapping("/{id}")
-    public void updateStation(@PathVariable String id,
-                                       @RequestBody Station updStation) {
-        stationService.updateStation(id, updStation);
-    }
-
     @GetMapping("/path")
     public Path getShortestPathFromStationToStation(
             @RequestParam Integer from,

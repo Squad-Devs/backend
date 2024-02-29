@@ -43,7 +43,6 @@ public class Station {
     @OneToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST,
             CascadeType.DETACH, CascadeType.REFRESH},
             mappedBy = "fromStation")
-    @JsonIgnore
     @ToString.Exclude
     private List<Connection> connections;
 }

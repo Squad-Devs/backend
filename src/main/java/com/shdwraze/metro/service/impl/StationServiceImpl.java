@@ -44,13 +44,7 @@ public class StationServiceImpl implements StationService {
     }
 
     @Override
-    public void updateStation(String id, Station updStation) {
-//        stationRepository.update(id, updStation);
-        // todo
-    }
-
-    @Override
-    @Cacheable(value = "shortestPath", key = "#from.concat('-').concat(#to)",
+    @Cacheable(value = "shortestPath", key = "#from.toString().concat('-').concat(#to.toString())",
             unless = "#result == null", cacheManager = "cacheManagerWithTTL")
     public Path getShortestPathFromStationToStation(Integer from, Integer to) {
         Queue<Station> queue = new LinkedList<>();
@@ -100,22 +94,14 @@ public class StationServiceImpl implements StationService {
     private List<Station> getStationNeighbors(Station station) {
         List<Station> neighbors = new ArrayList<>();
 
-        // Получаем все соединения для данной станции
         List<Connection> connections = station.getConnections();
 
-        // Проходимся по каждому соединению и добавляем соседние станции
         for (Connection connection : connections) {
-            if (connection.getType() == ConnectionType.NEXT || connection.getType() == ConnectionType.TRANSFER) {
-                neighbors.add(connection.getToStation());
-            }
-            if (connection.getType() == ConnectionType.PREV) {
-                neighbors.add(connection.getFromStation());
-            }
+            neighbors.add(connection.getToStation());
         }
 
         return neighbors;
     }
-
 
     private List<Station> reconstructPath(Integer fromStationId, Integer toStationId, Map<Integer, Integer> parents) {
         List<Station> path = new ArrayList<>();

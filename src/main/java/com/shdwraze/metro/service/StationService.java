@@ -13,8 +13,6 @@ public interface StationService {
 
     Station getStationById(Integer id);
 
-    void updateStation(String id, Station updStation);
-
     Path getShortestPathFromStationToStation(Integer from, Integer to);
 
     void addStations(List<Station> stations);
