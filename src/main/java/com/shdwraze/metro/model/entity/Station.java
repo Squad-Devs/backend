@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
@@ -14,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @Builder
-public class Station {
+public class Station implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,11 +39,13 @@ public class Station {
             CascadeType.DETACH, CascadeType.REFRESH},
             mappedBy = "station")
     @ToString.Exclude
+    @JsonIgnore
     private List<Exit> exits;
 
     @OneToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST,
             CascadeType.DETACH, CascadeType.REFRESH},
             mappedBy = "fromStation")
     @ToString.Exclude
+    @JsonIgnore
     private List<Connection> connections;
 }

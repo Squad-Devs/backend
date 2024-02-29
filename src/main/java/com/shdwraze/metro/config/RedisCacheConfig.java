@@ -1,19 +1,17 @@
 package com.shdwraze.metro.config;
 
-import com.google.common.cache.CacheBuilder;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 @Configuration
 public class RedisCacheConfig {
@@ -39,14 +37,13 @@ public class RedisCacheConfig {
 
     @Bean
     public CacheManager cacheManagerWithTTL() {
-        return new ConcurrentMapCacheManager() {
-            @Override
-            protected Cache createConcurrentMapCache(final String name) {
-                return new ConcurrentMapCache(name,
-                        CacheBuilder.newBuilder()
-                                .expireAfterWrite(5, TimeUnit.MINUTES)
-                                .build().asMap(), false);
-            }
-        };
+        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(5))
+                .disableCachingNullValues();
+
+        return RedisCacheManager.builder(jedisConnectionFactory())
+                .cacheDefaults(config)
+                .transactionAware()
+                .build();
     }
 }

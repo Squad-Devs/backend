@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
@@ -14,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 @Builder
-public class City {
+public class City implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

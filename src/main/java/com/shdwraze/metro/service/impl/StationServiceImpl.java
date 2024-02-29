@@ -2,10 +2,11 @@ package com.shdwraze.metro.service.impl;
 
 import com.shdwraze.metro.model.entity.Connection;
 import com.shdwraze.metro.model.entity.Station;
-import com.shdwraze.metro.model.entity.enums.ConnectionType;
 import com.shdwraze.metro.model.response.Path;
+import com.shdwraze.metro.model.response.StationResponse;
 import com.shdwraze.metro.repository.StationRepository;
 import com.shdwraze.metro.service.StationService;
+import com.shdwraze.metro.service.util.StationResponseHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -22,29 +23,28 @@ public class StationServiceImpl implements StationService {
 
     private static final int AVERAGE_TRAVEL_TIME_MIN = 5;
 
+    private final StationResponseHelper stationResponseHelper;
+
     private final StationRepository stationRepository;
 
     @Override
-    public List<Station> getStations(String city, String line) {
-        return line != null
+    public List<StationResponse> getStations(String city, String line) {
+        List<Station> stations = line != null
                 ? stationRepository.findByCityNameAndLineName(city, line)
                 : stationRepository.findByCityName(city);
+
+        return stations.stream().map(stationResponseHelper::convertToStationResponse).toList();
     }
 
     @Override
-    public Station addStation(Station station) {
-        stationRepository.save(station);
-        return station;
-    }
-
-    @Override
-    public Station getStationById(Integer id) {
-        return stationRepository.findById(id).orElseThrow(() ->
+    public StationResponse getStationById(Integer id) {
+        Station station = stationRepository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Station with this id isn't found!"));
+        return stationResponseHelper.convertToStationResponse(station);
     }
 
     @Override
-    @Cacheable(value = "shortestPath", key = "#from.toString().concat('-').concat(#to.toString())",
+    @Cacheable(value = "shortestPath", key = "#from.toString().concat(#to.toString())",
             unless = "#result == null", cacheManager = "cacheManagerWithTTL")
     public Path getShortestPathFromStationToStation(Integer from, Integer to) {
         Queue<Station> queue = new LinkedList<>();
@@ -80,15 +80,8 @@ public class StationServiceImpl implements StationService {
         return Path.builder()
                 .transfersNumber(getNumberOfTransfers(path))
                 .travelTimeInMinutes(getTravelTimeInMinutes(path))
-                .path(path)
+                .path(path.stream().map(stationResponseHelper::convertToStationResponse).toList())
                 .build();
-    }
-
-    @Override
-    public void addStations(List<Station> stations) {
-        for (Station station : stations) {
-            log.error(addStation(station).toString());
-        }
     }
 
     private List<Station> getStationNeighbors(Station station) {

@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "connections")
 @Getter
@@ -14,7 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Builder
-public class Connection {
+public class Connection implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -10,18 +10,22 @@ import com.shdwraze.metro.model.response.Metropolitan;
 import com.shdwraze.metro.repository.CityRepository;
 import com.shdwraze.metro.repository.StationRepository;
 import com.shdwraze.metro.service.MetroService;
+import com.shdwraze.metro.service.util.StationResponseHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class MetroServiceImpl implements MetroService {
+
+    private final StationResponseHelper stationResponseHelper;
 
     private final CityRepository cityRepository;
 
@@ -37,7 +41,6 @@ public class MetroServiceImpl implements MetroService {
     public Metropolitan getMetropolitanByCity(String city) {
         List<Station> stations = stationRepository.findByCityName(city);
 
-        // Группировка станций по линиям
         Map<Line, List<Station>> stationsByLine = stations.stream()
                 .collect(Collectors.groupingBy(Station::getLine));
 
@@ -47,7 +50,10 @@ public class MetroServiceImpl implements MetroService {
                     List<Station> lineStations = entry.getValue();
                     int color = line.getColor() != null ? line.getColor() : Color.BLACK.getRGB();
                     List<Station> sortedStations = sortStations(lineStations);
-                    return new MetroLine(line.getName(), color, sortedStations);
+                    return new MetroLine(line.getName(), color,
+                            sortedStations.stream()
+                                    .map(stationResponseHelper::convertToStationResponse)
+                                    .toList());
                 })
                 .toList();
 
@@ -57,7 +63,6 @@ public class MetroServiceImpl implements MetroService {
     private List<Station> sortStations(List<Station> stations) {
         List<Station> sortedStations = new ArrayList<>();
 
-        // Находим начальную станцию
         Station currentStation = stations.stream()
                 .filter(station -> station.getConnections().stream()
                         .noneMatch(connection -> connection.getType() == ConnectionType.PREV))
@@ -66,7 +71,6 @@ public class MetroServiceImpl implements MetroService {
 
         while (currentStation != null) {
             sortedStations.add(currentStation);
-            // Ищем следующую станцию по соединениям
             currentStation = currentStation.getConnections().stream()
                     .filter(connection -> connection.getType() == ConnectionType.NEXT)
                     .map(Connection::getToStation)

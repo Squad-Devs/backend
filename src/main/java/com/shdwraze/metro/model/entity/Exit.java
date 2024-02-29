@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "exits")
 @Getter
@@ -12,7 +14,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @Builder
-public class Exit {
+public class Exit implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
