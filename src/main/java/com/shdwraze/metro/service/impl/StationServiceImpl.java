@@ -45,7 +45,7 @@ public class StationServiceImpl implements StationService {
 
     @Override
     @Cacheable(value = "shortestPath", key = "#from.toString().concat(#to.toString())",
-            unless = "#result == null", cacheManager = "cacheManagerWithTTL")
+            unless = "#result == null", cacheManager = "cacheManager")
     public Path getShortestPathFromStationToStation(Integer from, Integer to) {
         Queue<Station> queue = new LinkedList<>();
         Set<Integer> visited = new HashSet<>();
