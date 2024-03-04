@@ -47,6 +47,10 @@ public class StationServiceImpl implements StationService {
     @Cacheable(value = "shortestPath", key = "#from.toString().concat(#to.toString())",
             unless = "#result == null", cacheManager = "cacheManager")
     public Path getShortestPathFromStationToStation(Integer from, Integer to) {
+        if (from == null || to == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Station ids can't be null!");
+        }
+
         Queue<Station> queue = new LinkedList<>();
         Set<Integer> visited = new HashSet<>();
         Map<Integer, Integer> parents = new HashMap<>();

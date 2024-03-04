@@ -13,7 +13,9 @@ import com.shdwraze.metro.service.MetroService;
 import com.shdwraze.metro.service.util.StationResponseHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -39,6 +41,12 @@ public class MetroServiceImpl implements MetroService {
     @Override
     @Cacheable(value = "metropolitan", key = "#city")
     public Metropolitan getMetropolitanByCity(String city) {
+        if (city == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "City value can't be null!");
+        } else if (!cityRepository.existsByName(city)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "City with this name isn't found");
+        }
+
         List<Station> stations = stationRepository.findByCityName(city);
 
         Map<Line, List<Station>> stationsByLine = stations.stream()
