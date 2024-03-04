@@ -1,6 +1,5 @@
 package com.shdwraze.metro.model.response;
 
-import com.shdwraze.metro.model.entity.Station;
 import lombok.Builder;
 
 import java.io.Serializable;
@@ -12,6 +11,6 @@ public record Path(
 
         int travelTimeInMinutes,
 
-        List<Station> path
+        List<StationResponse> path
 ) implements Serializable {
 }

@@ -5,31 +5,28 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
-@Table(name = "exits")
+@Table(name = "cities")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 @Builder
-public class Exit implements Serializable {
+public class City implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST,
-            CascadeType.DETACH, CascadeType.REFRESH})
-    @JoinColumn(name = "station_id")
+    private String name;
+
+    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST,
+            CascadeType.DETACH, CascadeType.REFRESH},
+            mappedBy = "city")
     @ToString.Exclude
     @JsonIgnore
-    private Station station;
-
-    private Integer exitNumber;
-
-    private Double latitude;
-
-    private Double longitude;
+    private List<Station> stations;
 }
