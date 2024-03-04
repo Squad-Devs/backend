@@ -9,7 +9,5 @@ public interface MetroService {
 
     List<City> getCities();
 
-//    Set<String> getMetroLinesByCity(String city);
-
     Metropolitan getMetropolitanByCity(String city);
 }
